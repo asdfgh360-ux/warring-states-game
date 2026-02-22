@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>战国商人·货币贸易模拟</title>
+  <style>
+    :root{
+      --bg:#f2f3f6;
+      --panel:#ffffff;
+      --lav:#6a67d6;
+      --line:#e6e6ee;
+      --title:#7a2f00;
+      --cardbg:#fff7da;
+      --green:#2ea043;
+      --blue:#1f6feb;
+      --muted:#6b7280;
+      --shadow: 0 8px 20px rgba(0,0,0,.08);
+      --danger:#ff4d4f;
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --brown:#a35217;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC","Noto Sans CJK SC","Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #6e79e7 0%, #5c5bd1 100%);
+      color:#111827;
+      min-height:100vh;
+    }
+
+    /* ===== Intro page ===== */
+    .intro{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px 14px;
+    }
+    .intro-card{
+      width:min(920px, 100%);
+      background:#fff;
+      border-radius:18px;
+      box-shadow: 0 20px 70px rgba(0,0,0,.22);
+      padding: 26px 22px 28px;
+    }
+    .intro-title{
+      display:flex; gap:12px; align-items:center; justify-content:center;
+      font-size:34px;
+      font-weight:1000;
+      color: var(--title);
+      margin: 6px 0 10px;
+      letter-spacing:1px;
+    }
+    .intro-title .pill{
+      width:40px;height:40px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:#f5efe1;border:1px solid #e6d5b9;
+      font-size:22px;
+    }
+    .intro-text{
+      text-align:center;
+      color:#374151;
+      line-height:1.9;
+      font-size:14px;
+      margin-top: 10px;
+      white-space:pre-line;
+    }
+    .intro-strong{
+      font-weight:900;
+      color:#111827;
+    }
+    .intro-maker{
+      margin-top: 10px;
+      text-align:center;
+      font-size:13px;
+      color:#6b7280;
+      font-weight:800;
+    }
+    .intro-actions{
+      display:flex;
+      justify-content:center;
+      margin-top: 24px;
+    }
+    .intro-btn{
+      border:none;
+      border-radius: 14px;
+      padding: 16px 42px;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+      background:#8b4a1a;
+      color:#fff;
+      box-shadow: 0 12px 30px rgba(139,74,26,.25);
+    }
+    .intro-btn:hover{filter:brightness(1.03)}
+    .hidden{display:none !important;}
+
+    /* ===== Game layout ===== */
+    .wrap{
+      display:grid;
+      grid-template-columns: 340px 1fr 340px;
+      gap: 18px;
+      padding: 14px;
+      max-width: 1450px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1150px){ .wrap{grid-template-columns:1fr;} }
+
+    .col{
+      border-left: 10px solid var(--lav);
+      border-right: 10px solid var(--lav);
+      border-radius: 10px;
+      padding: 14px;
+      background: transparent;
+    }
+    .panel{
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .section-title{
+      display:flex; align-items:center; gap:10px;
+      font-weight: 900;
+      color: var(--title);
+      font-size: 18px;
+      margin: 2px 0 10px;
+    }
+    .section-title .icon{
+      width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+      border-radius:6px;background:#e9f2ff;color:#1f6feb;font-weight:900;
+    }
+    .divider{height:2px;background:#c45b17;margin:8px 0 12px;}
+
+    /* tasks */
+    .task-card{
+      background: var(--cardbg);
+      border: 2px solid var(--brown);
+      border-radius: 10px;
+      padding: 12px 12px 10px;
+      margin-bottom: 12px;
+    }
+    .task-card h4{margin:0 0 6px;font-size: 14px;color:#7a2f00;}
+    .task-card .sub{font-size: 12px;color:#7a2f00;font-weight:800;margin-bottom:6px;}
+    .task-card ul{margin:0;padding-left: 18px;font-size: 12px;color:#374151;line-height:1.55;}
+    .task-card .hint{margin-top:8px;font-size:12px;color:#7a2f00;display:flex;gap:8px;align-items:flex-start;}
+    .status{margin-top:8px;font-size:12px;display:flex;align-items:center;gap:8px;color:#374151;flex-wrap:wrap;}
+    .dot{width:10px;height:10px;border-radius:999px;display:inline-block;}
+    .dot.run{background:#ff4d4f;}
+    .dot.todo{background:#f59e0b;}
+    .dot.done{background:#22c55e;}
+
+    /* center map */
+    .map-title{
+      display:flex;align-items:center;gap:10px;
+      font-weight:900;color:#7a2f00;font-size: 24px;margin:0;
+    }
+    .map-title .book{
+      width:24px;height:24px;border-radius:6px;background:#dff3ff;
+      display:inline-flex;align-items:center;justify-content:center;color:#0b5ed7;font-weight:900;
+    }
+    .map-area{
+      background:#ffffff;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .nation-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+    @media (max-width: 1150px){ .nation-grid{grid-template-columns: repeat(2, minmax(0, 1fr));} }
+    .nation-card{
+      background:#fff7da;
+      border: 2px solid var(--brown);
+      border-radius: 12px;
+      padding: 12px;
+      cursor:pointer;
+      transition: .15s;
+      min-height: 112px;
+    }
+    .nation-card:hover{transform: translateY(-1px)}
+    .nation-card.active{
+      border-color:#1f8a3b;
+      box-shadow: 0 0 0 3px rgba(46,160,67,.18);
+      background:#f1ffef;
+    }
+    .nation-name{font-weight:900;color:#7a2f00;font-size: 16px;margin:0 0 6px;text-align:center;}
+    .nation-currency{
+      text-align:center;
+      font-size: 12px;
+      color:#374151;
+      margin-bottom: 10px;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .coin{
+      width:16px;height:16px;border-radius:999px;background:#ffe08a;
+      display:inline-flex;align-items:center;justify-content:center;font-size:12px;
+      border:1px solid #d8a63a;
+    }
+    .btn-row{display:flex;gap:10px;justify-content:center;}
+    .btn{
+      border:none;border-radius: 10px;padding: 9px 10px;font-weight: 900;font-size: 12px;
+      cursor:pointer;color:#fff;display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn.green{background: var(--green);}
+    .btn.blue{background: var(--blue);}
+
+    /* stats */
+    .stats{
+      margin-top: 14px;
+      background:#ffffff;border-radius: 12px;box-shadow: var(--shadow);padding: 12px;
+    }
+    .stats-head{display:flex;align-items:center;gap:10px;font-weight: 900;color:#7a2f00;font-size: 18px;margin:0;}
+    .stats-head .chart{
+      width:20px;height:20px;border-radius:6px;background:#fff2cc;
+      display:inline-flex;align-items:center;justify-content:center;color:#7a2f00;font-weight:900;
+      border:1px solid #e2b25b;
+    }
+    .stats-divider{height:2px;background:#c45b17;margin:8px 0 12px;}
+    .stat-grid{display:grid;grid-template-columns: repeat(3, minmax(0, 1fr));gap: 12px;}
+    .stat{background:#f8f8ea;border-radius: 10px;padding: 12px;text-align:center;border:1px solid #ececd8;}
+    .stat .label{font-size:12px;color:#6b7280;margin-bottom:6px;}
+    .stat .value{font-size:22px;font-weight: 900;}
+    .stat .value.red{color:#ff4d4f;}
+    .stat .value.green{color:#16a34a;}
+
+    /* right wallet list */
+    .wallet-list{display:flex;flex-direction:column;gap:10px;}
+    .wallet-item{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background:#f6f6f2;
+    }
+    .w-left{display:flex;align-items:center;gap:10px;min-width:0;}
+    .w-ico{
+      width:28px;height:28px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:900;color:#111827;
+      border:1px solid rgba(0,0,0,.08);
+      flex:0 0 auto;
+    }
+    .w-meta{min-width:0;}
+    .w-name{font-weight:900;color:#7a2f00;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .w-rate{font-size:12px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .w-amt{font-weight:900;color:#a35217;white-space:nowrap;}
+    .w-amt small{color:#6b7280;font-weight:800;margin-left:4px;}
+
+    /* info */
+    .info-card{margin-top: 14px;background:#ffffff;border-radius: 12px;box-shadow: var(--shadow);padding: 12px;}
+    .info-head{display:flex;align-items:center;gap:10px;font-weight: 900;color:#7a2f00;font-size: 18px;margin:0;}
+    .info-head .i{
+      width:20px;height:20px;border-radius:6px;background:#e9f2ff;
+      display:inline-flex;align-items:center;justify-content:center;color:#1f6feb;font-weight:900;
+      border:1px solid #cfe3ff;
+    }
+    .info-divider{height:2px;background:#c45b17;margin:8px 0 10px;}
+    .info-card ol{margin:0;padding-left: 18px;font-size:12px;color:#374151;line-height:1.7;}
+
+    /* modals */
+    .modal-backdrop{
+      position:fixed; inset:0;background: rgba(0,0,0,.35);
+      display:none;align-items:center;justify-content:center;padding: 16px;z-index: 99;
+    }
+    .modal{width:min(900px, 100%);background:#fff;border-radius: 14px;box-shadow: 0 20px 60px rgba(0,0,0,.25);overflow:hidden;}
+    .modal-head{
+      padding: 12px 14px;display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid var(--line);background: #fffdf4;
+    }
+    .modal-head h3{margin:0;font-size:18px;color:#7a2f00;font-weight: 900;}
+    .modal-body{padding: 14px;}
+    .modal-close{border:none;background:#f3f4f6;border:1px solid var(--line);padding: 8px 10px;border-radius:10px;cursor:pointer;font-weight:900;}
+
+    /* market modal */
+    .grid2{display:grid;grid-template-columns: 1fr 320px;gap: 12px;}
+    @media (max-width: 900px){.grid2{grid-template-columns:1fr;}}
+    table{width:100%;border-collapse: collapse;font-size: 12px;}
+    th,td{padding: 10px 10px;border-bottom:1px solid #eee;text-align:left;}
+    th{background:#fafafa;color:#374151}
+    .mini{background:#f9fafb;border:1px solid var(--line);border-radius: 12px;padding: 12px;}
+    .mini h4{margin:0 0 8px;color:#7a2f00}
+    .mini .kv{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px dashed #e5e7eb}
+    .mini .kv:last-child{border-bottom:none}
+    .ctl{display:flex;gap:8px;flex-wrap:wrap;margin-top: 10px;}
+    select,input{padding: 10px 10px;border-radius: 10px;border:1px solid var(--line);background:#fff;font-size: 12px;min-width: 180px;}
+    .btn2{border:none;border-radius: 10px;padding: 10px 12px;font-weight:900;cursor:pointer;color:#fff;font-size: 12px;}
+    .btn2.buy{background: var(--green);}
+    .btn2.sell{background: var(--blue);}
+    .hint2{font-size:12px;color:#6b7280;margin-top:8px;line-height:1.6}
+    .toast{margin-top:10px;padding:10px 12px;border-radius: 10px;background:#f3f4f6;border:1px solid var(--line);font-size:12px;color:#374151;}
+    .toast.bad{border-color:#ffd1d1;background:#fff0f0;color:#7f1d1d;}
+
+    /* FX modal */
+    .fx-wrap{display:grid;grid-template-columns: 1fr;gap:12px;}
+    .fx-fee{font-size:14px;color:#374151;font-weight:900;}
+    .fx-fee b{color:#7a2f00}
+    .fx-label{font-size:13px;color:#a35217;font-weight:900;margin-top:4px;}
+    .fx-box{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;}
+    .fx-row{display:grid;grid-template-columns: 1fr;gap:10px;}
+    .fx-kv{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:8px 10px;border-radius:10px;background:#f9fafb;border:1px solid var(--line);
+      font-size:13px;
+    }
+    .fx-kv b{font-weight:900;}
+    .fx-green{color:var(--ok);}
+    .fx-red{color:var(--danger);}
+    .fx-btn{
+      width:100%;
+      border:none;border-radius:10px;
+      padding: 12px 14px;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      background:#a35217;
+      color:#fff;
+    }
+
+    /* done modal */
+    .done-title{
+      display:flex;align-items:center;gap:10px;
+      font-size:20px;font-weight:900;color:#7a2f00;
+      margin:0;
+    }
+    .done-title .spark{
+      width:26px;height:26px;border-radius:8px;background:#fff2cc;border:1px solid #f0d39b;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .done-sub{color:#6b7280;font-size:13px;margin:6px 0 10px;}
+    .done-grid{
+      display:grid;grid-template-columns: repeat(3, minmax(0, 1fr));gap: 12px;
+      margin-top: 8px;
+    }
+    @media (max-width: 900px){ .done-grid{grid-template-columns:1fr;} }
+    .done-box{
+      border:1px solid #e9e9d8;
+      background:#f8f8ea;
+      border-radius:12px;
+      padding:14px;
+      text-align:center;
+    }
+    .done-box .t{font-size:12px;color:#6b7280;margin-bottom:8px;}
+    .done-box .v{font-size:26px;font-weight:900;}
+    .done-box .v.green{color:var(--ok);}
+    .done-box .v.red{color:var(--danger);}
+
+    .note{
+      margin-top:12px;
+      border-radius:12px;
+      border:1px solid #f0d39b;
+      background:#fff7da;
+      padding:12px;
+      line-height:1.7;
+      font-size:13px;
+      color:#374151;
+    }
+    .note h4{margin:0 0 8px;color:#7a2f00;font-size:14px;}
+    .think{
+      margin-top:12px;
+      border-radius:12px;
+      border:1px solid #cfead0;
+      background:#eefbf0;
+      padding:12px;
+      line-height:1.7;
+      font-size:13px;
+      color:#374151;
+    }
+    .think h4{margin:0 0 8px;color:#0f7a2e;font-size:14px;}
+
+    .done-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:12px;
+    }
+    .btn-ghost{
+      border:1px solid var(--line);
+      background:#fff;
+      color:#374151;
+      border-radius:10px;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn-primary{
+      border:none;
+      background:#a35217;
+      color:#fff;
+      border-radius:10px;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    #globalToast{
+      position:fixed; left:50%; top:22px; transform:translateX(-50%);
+      background:#111827; color:#fff; padding:10px 14px; border-radius:12px;
+      font-size:13px; font-weight:900; box-shadow:0 10px 25px rgba(0,0,0,.25);
+      display:none; z-index:200;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Intro page (只保留红框信息 + 开始按钮) -->
+  <section class="intro" id="introPage">
+    <div class="intro-card">
+      <div class="intro-title">
+        <span class="pill">🏛️</span>
+        战国商人
+        <span class="pill">🏛️</span>
+      </div>
+
+      <div class="intro-text">
+        <span class="intro-strong">游戏背景：</span>战国末期，七雄争霸。各国货币互不相同，商人贸易异常艰难。
+
+        <span class="intro-strong">你的任务：</span>作为一名跨国商人，你需要完成贸易任务，体验货币不统一的弊端，理解秦朝统一货币的重要性。
+
+        <span class="intro-strong">核心挑战：</span>各国货币不互通、汇率波动、兑换手续费、交易风险...
+      </div>
+
+      <div class="intro-maker">游戏制作方：即刻狐PBL项目式学习</div>
+
+      <div class="intro-actions">
+        <button class="intro-btn" onclick="startGame()">开始贸易之旅</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Game page -->
+  <div class="wrap hidden" id="gamePage">
+    <div class="col">
+      <div class="panel">
+        <div class="section-title"><span class="icon">📋</span>当前任务</div>
+        <div class="divider"></div>
+        <div id="taskList"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="map-area">
+        <div class="map-title"><span class="book">📖</span>战国七雄地图</div>
+        <div class="nation-grid" id="nationGrid"></div>
+
+        <div class="stats">
+          <div class="stats-head"><span class="chart">📈</span>贸易统计</div>
+          <div class="stats-divider"></div>
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="label">已完成任务</div>
+              <div class="value" id="statTasks">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">兑换损失（秦半两）</div>
+              <div class="value red" id="statFxLoss">0.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">贸易利润（秦半两）</div>
+              <div class="value green" id="statTrade">0.0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel">
+        <div class="section-title"><span class="icon">💰</span>货币钱包</div>
+        <div class="divider"></div>
+        <div class="wallet-list" id="walletCards"></div>
+
+        <div class="info-card">
+          <div class="info-head"><span class="i">i</span>操作说明</div>
+          <div class="info-divider"></div>
+          <ol>
+            <li>初始资金：<b>500 秦半两</b>；初始地点：<b>赵国</b></li>
+            <li>要在某国交易/兑换：必须先点击该国卡片“到达该国”</li>
+            <li>各国只收本国货币：买卖前常需要兑换</li>
+            <li>兑换会收取手续费（默认 <b>10%</b>），并计入“兑换损失”</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="globalToast"></div>
+
+  <!-- Market Modal -->
+  <div class="modal-backdrop" id="marketModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="marketTitle">商品集市</h3>
+        <button class="modal-close" onclick="closeModal('marketModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid2">
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>商品</th>
+                  <th>买入价</th>
+                  <th>卖出价</th>
+                  <th>你的库存</th>
+                </tr>
+              </thead>
+              <tbody id="marketTable"></tbody>
+            </table>
+
+            <div class="ctl">
+              <select id="marketGood"></select>
+              <input id="marketQty" type="number" min="1" value="1"/>
+              <button class="btn2 buy" onclick="marketBuy()">买入</button>
+              <button class="btn2 sell" onclick="marketSell()">卖出</button>
+            </div>
+            <div class="hint2" id="marketHint"></div>
+            <div class="toast" id="marketToast">提示：买卖按本国货币结算，不收外币。</div>
+          </div>
+
+          <div class="mini">
+            <h4>你的资产</h4>
+            <div class="kv"><span>所在国家</span><b id="miniNation">-</b></div>
+            <div class="kv"><span>该国货币</span><b id="miniCur">-</b></div>
+            <div class="kv"><span>该币余额</span><b id="miniBal">-</b></div>
+            <div class="kv"><span>贸易利润(秦半两)</span><b id="miniTrade">-</b></div>
+            <div class="kv"><span>兑换损失(秦半两)</span><b id="miniFx">-</b></div>
+            <div class="kv"><span>净利润(秦半两)</span><b id="miniNet">-</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FX Modal -->
+  <div class="modal-backdrop" id="fxModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="fxTitle">货币兑换</h3>
+        <button class="modal-close" onclick="closeModal('fxModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="fx-wrap">
+          <div class="fx-fee">兑换手续费：<b id="fxFeeText">10%</b></div>
+
+          <div class="fx-box">
+            <div class="fx-label">选择要兑换的货币</div>
+            <div class="fx-row">
+              <select id="fxFrom"></select>
+            </div>
+
+            <div class="fx-label">兑换数量</div>
+            <div class="fx-row">
+              <input id="fxAmt" type="number" min="1" value="10"/>
+            </div>
+
+            <div class="fx-label">汇率信息</div>
+            <div class="fx-kv">
+              <span id="fxRateLine">-</span>
+              <b id="fxTargetName">-</b>
+            </div>
+
+            <div class="fx-label">预计获得</div>
+            <div class="fx-kv">
+              <span>预计获得</span>
+              <b class="fx-green" id="fxReceive">-</b>
+            </div>
+
+            <div class="fx-label">手续费</div>
+            <div class="fx-kv">
+              <span>手续费</span>
+              <b class="fx-red" id="fxFeeAmount">-</b>
+            </div>
+
+            <div style="margin-top:12px;">
+              <button class="fx-btn" onclick="doExchange()">确认兑换</button>
+            </div>
+
+            <div class="hint2" id="fxHint">
+              提示：各国只收本国货币。为了完成任务，你需要在不同国家反复兑换，这会带来额外成本。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done Modal -->
+  <div class="modal-backdrop" id="doneModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="done-title"><span class="spark">🎉</span>恭喜完成所有任务！</h3>
+        <button class="modal-close" onclick="closeModal('doneModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="done-sub">贸易总结：你已完成所有贸易任务！</div>
+
+        <div class="done-grid">
+          <div class="done-box">
+            <div class="t">贸易利润（秦半两）</div>
+            <div class="v green" id="doneTrade">0.0</div>
+          </div>
+          <div class="done-box">
+            <div class="t">兑换损失（秦半两）</div>
+            <div class="v red" id="doneFx">0.0</div>
+          </div>
+          <div class="done-box">
+            <div class="t">净利润（秦半两）</div>
+            <div class="v" id="doneNet">0.0</div>
+          </div>
+        </div>
+
+        <div class="note">
+          <h4>📚 历史知识</h4>
+          <div id="doneHistory">
+            战国时期，各国货币各不相同，商人贸易需要反复兑换货币，不仅要承担汇率波动的风险，还要支付高昂的手续费。
+            这也是为什么秦统一后推行统一货币，能显著降低交易成本、促进经济流通。
+          </div>
+        </div>
+
+        <div class="think">
+          <h4>💡 思考题</h4>
+          <div><b>货币统一，能解决哪些问题？</b></div>
+          <div id="doneThink">
+            参考答案：货币统一可以减少兑换成本，降低交易风险，提高贸易效率，促进商品与资源更快流通，从而推动经济发展。
+          </div>
+        </div>
+
+        <div class="done-actions">
+          <button class="btn-ghost" onclick="restartGame()">🔄 重新开始</button>
+          <button class="btn-primary" onclick="closeModal('doneModal')">✅ 关闭</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ====== Intro -> Game ====== */
+function startGame(){
+  document.getElementById("introPage").classList.add("hidden");
+  document.getElementById("gamePage").classList.remove("hidden");
+  initState();
+  tasks = structuredClone(initialTasks);
+  renderAll();
+  goNation("ZHAO");
+  showToast("已开始贸易之旅");
+}
+
+/* ====== Game data ====== */
+const nations = [
+  { id:"QIN",  name:"秦国", currency:"秦半两", icon:"口", color:"#ff6b3d" },
+  { id:"QI",   name:"齐国", currency:"齐刀",   icon:"⚔", color:"#f6c84c" },
+  { id:"CHU",  name:"楚国", currency:"蚁鼻钱", icon:"✦", color:"#3bb273" },
+  { id:"YAN",  name:"燕国", currency:"明刀",   icon:"✶", color:"#9b5de5" },
+  { id:"HAN",  name:"韩国", currency:"布币",   icon:"⛏", color:"#2f7cf6" },
+  { id:"ZHAO", name:"赵国", currency:"布币",   icon:"⛏", color:"#2f7cf6" },
+  { id:"WEI",  name:"魏国", currency:"布币",   icon:"⛏", color:"#2f7cf6" }
+];
+
+const goods = [
+  { id:"SALT",    name:"盐",     baseBuyQin: 4.0,  baseSellQin: 3.4 },
+  { id:"HORSE",   name:"马匹",   baseBuyQin: 26.0, baseSellQin: 22.5 },
+  { id:"LEATHER", name:"皮革",   baseBuyQin: 9.5,  baseSellQin: 8.2 },
+  { id:"GRAIN",   name:"粮食",   baseBuyQin: 2.4,  baseSellQin: 2.0 },
+  { id:"IRON",    name:"铁器",   baseBuyQin: 8.2,  baseSellQin: 7.0 },
+  { id:"SILK",    name:"丝绸",   baseBuyQin: 15.0, baseSellQin: 12.8 }
+];
+
+function rateKey(nationId){
+  const n = nations.find(x=>x.id===nationId);
+  return `${n.name}|${n.currency}`;
+}
+
+const rateToQi = {
+  "齐国|齐刀": 1.00,
+  "楚国|蚁鼻钱": 5.39,
+  "秦国|秦半两": 1.75,
+  "燕国|明刀": 1.20,
+  "韩国|布币": 0.92,
+  "赵国|布币": 0.95,
+  "魏国|布币": 0.90
+};
+const QIN_KEY = rateKey("QIN");
+function toQinRate(curKey){
+  return (rateToQi[curKey] / rateToQi[QIN_KEY]);
+}
+function convert(amount, fromKey, toKey){
+  const inQin = amount * toQinRate(fromKey);
+  return inQin / toQinRate(toKey);
+}
+
+const marketGoodsByNation = {
+  CHU: ["SALT","GRAIN","SILK"],
+  QIN: ["SALT","HORSE","IRON","GRAIN"],
+  ZHAO:["HORSE","GRAIN","IRON"],
+  YAN: ["LEATHER","IRON","SILK"],
+  WEI: ["LEATHER","GRAIN","IRON"],
+  QI:  ["SALT","SILK","IRON"],
+  HAN: ["GRAIN","IRON"]
+};
+
+const nationPriceFactor = {
+  QIN: 1.20,
+  WEI: 1.15,
+  CHU: 0.90,
+  ZHAO: 0.95,
+  YAN: 0.92,
+  QI:  1.00,
+  HAN: 1.00
+};
+
+function getPrices(nationId){
+  const curKey = rateKey(nationId);
+  const factor = nationPriceFactor[nationId] || 1.0;
+  const allowed = new Set(marketGoodsByNation[nationId] || []);
+  return goods.filter(g=>allowed.has(g.id)).map(g=>{
+    const buyLocal = convert(g.baseBuyQin, QIN_KEY, curKey) * factor;
+    const sellLocal = convert(g.baseSellQin, QIN_KEY, curKey) * factor;
+    return { ...g, buy: round1(buyLocal), sell: round1(sellLocal) };
+  });
+}
+
+const state = {
+  currentNation: "ZHAO",
+  wallet: {},
+  inv: {},
+  fxLossQin: 0,
+  tradeProfitQin: 0,
+  completedTasks: 0,
+  doneShown:false
+};
+
+function initState(){
+  nations.forEach(n=> state.wallet[rateKey(n.id)] = 0);
+  goods.forEach(g=> state.inv[g.id] = 0);
+  state.wallet[QIN_KEY] = 500;
+  state.fxLossQin = 0;
+  state.tradeProfitQin = 0;
+  state.completedTasks = 0;
+  state.doneShown = false;
+  state.currentNation = "ZHAO";
+}
+
+/* ====== Tasks（任务1&2已对调） ====== */
+const initialTasks = [
+  { id:1, title:"从赵国采购马匹运往秦国售卖",
+    steps:["【采购阶段】前往赵国，购买3匹马 →","【运输阶段】前往秦国 →","【售卖阶段】在秦国出售马匹"],
+    hint:"你初始在赵国，但只有秦半两；先兑换成赵国布币再采购",
+    status:"running", progress:{bought:false,moved:false,sold:false}
+  },
+  { id:2, title:"从楚国采购盐运往秦国售卖",
+    steps:["【采购阶段】前往楚国，购买10斤盐 →","【运输阶段】前往秦国 →","【售卖阶段】在秦国出售盐"],
+    hint:"楚国收蚁鼻钱，秦国收秦半两；外币不收，先兑换",
+    status:"todo", progress:{bought:false,moved:false,sold:false}
+  },
+  { id:3, title:"从燕国采购皮革运往魏国售卖",
+    steps:["【采购阶段】前往燕国，购买5件皮革 →","【运输阶段】前往魏国 →","【售卖阶段】在魏国出售皮革"],
+    hint:"燕国收明刀，魏国收布币；注意兑换损失",
+    status:"todo", progress:{bought:false,moved:false,sold:false}
+  }
+];
+
+let tasks = structuredClone(initialTasks);
+
+/* ====== Helpers & UI ====== */
+function $(id){ return document.getElementById(id); }
+function round1(n){ return Math.round(n*10)/10; }
+function round3(n){ return Math.round(n*1000)/1000; }
+function netProfitQin(){ return state.tradeProfitQin - state.fxLossQin; }
+
+function showToast(msg){
+  const t = $("globalToast");
+  t.textContent = msg;
+  t.style.display = "block";
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=>{ t.style.display="none"; }, 1600);
+}
+
+function restartGame(){
+  closeModal("doneModal");
+  closeModal("marketModal");
+  closeModal("fxModal");
+  tasks = structuredClone(initialTasks);
+  initState();
+  renderAll();
+  goNation("ZHAO");
+  showToast("已重新开始");
+}
+
+function getActiveTask(){
+  const running = tasks.find(t=>t.status==="running");
+  return running || tasks.find(t=>t.status==="todo") || null;
+}
+function taskSpec(t){
+  if(t.id===1) return { buyNation:"ZHAO", sellNation:"QIN", goodId:"HORSE", qty:3 };
+  if(t.id===2) return { buyNation:"CHU",  sellNation:"QIN", goodId:"SALT",  qty:10 };
+  if(t.id===3) return { buyNation:"YAN",  sellNation:"WEI", goodId:"LEATHER",qty:5 };
+  return null;
+}
+function completeTask(t){
+  t.status = "done";
+  state.completedTasks += 1;
+  const next = tasks.find(x=>x.status==="todo");
+  if(next) next.status = "running";
+  renderAll();
+  maybeShowDoneModal();
+}
+function maybeShowDoneModal(){
+  if(state.doneShown) return;
+  if(state.completedTasks >= 3){
+    state.doneShown = true;
+    const net = netProfitQin();
+    $("doneTrade").textContent = round1(state.tradeProfitQin);
+    $("doneFx").textContent = round1(state.fxLossQin);
+    $("doneNet").textContent = round1(net);
+    $("doneNet").className = "v " + (net>=0 ? "green":"red");
+    openModal("doneModal");
+  }
+}
+function checkTasksOnMove(){
+  const t = getActiveTask(); if(!t) return;
+  const spec = taskSpec(t);
+  if(t.progress.bought && state.currentNation===spec.sellNation) t.progress.moved = true;
+  renderTasks();
+}
+function checkTasksOnBuy(goodId){
+  const t = getActiveTask(); if(!t) return;
+  const spec = taskSpec(t);
+  if(state.currentNation===spec.buyNation && goodId===spec.goodId && state.inv[spec.goodId] >= spec.qty){
+    t.progress.bought = true;
+  }
+  renderTasks();
+}
+function checkTasksOnSell(goodId){
+  const t = getActiveTask(); if(!t) return;
+  const spec = taskSpec(t);
+  if(t.progress.moved && state.currentNation===spec.sellNation && goodId===spec.goodId && state.inv[spec.goodId] === 0){
+    t.progress.sold = true;
+    completeTask(t);
+  }
+  renderTasks();
+}
+
+function renderNationGrid(){
+  const grid = $("nationGrid");
+  grid.innerHTML = "";
+  const order = ["QIN","QI","CHU","YAN","HAN","ZHAO","WEI"];
+  order.forEach(id=>{
+    const n = nations.find(x=>x.id===id);
+    const card = document.createElement("div");
+    card.className = "nation-card" + (state.currentNation===id ? " active":"");
+    card.onclick = ()=> goNation(id);
+    card.innerHTML = `
+      <div class="nation-name">${n.name}</div>
+      <div class="nation-currency"><span class="coin">🪙</span>${n.currency}</div>
+      <div class="btn-row">
+        <button class="btn green" onclick="event.stopPropagation(); openMarket('${id}')">🛒 商品集市</button>
+        <button class="btn blue" onclick="event.stopPropagation(); openFx('${id}')">💱 货币兑换</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+function renderTasks(){
+  const list = $("taskList");
+  list.innerHTML = "";
+  tasks.forEach(t=>{
+    const card = document.createElement("div");
+    card.className = "task-card";
+    let dotClass = "todo", statusText = "未开始";
+    if(t.status==="running"){ dotClass="run"; statusText="进行中"; }
+    if(t.status==="done"){ dotClass="done"; statusText="已完成"; }
+
+    const prog = t.progress;
+    const progText = t.status==="done" ? "✅ 已完成"
+      : `进度：${prog.bought?"✅采购":"⬜采购"} / ${prog.moved?"✅运输":"⬜运输"} / ${prog.sold?"✅售卖":"⬜售卖"}`;
+
+    card.innerHTML = `
+      <h4>任务 ${t.id}</h4>
+      <div class="sub">${t.title}</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:6px;"><b>详细步骤：</b></div>
+      <ul>${t.steps.map(s=>`<li>${s}</li>`).join("")}</ul>
+      <div class="hint">💡 <div><b>提示：</b>${t.hint}</div></div>
+      <div class="status">
+        <span class="dot ${dotClass}"></span><b>${statusText}</b>
+        <span style="color:#6b7280">· ${progText}</span>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+function renderStats(){
+  $("statTasks").textContent = state.completedTasks;
+  $("statFxLoss").textContent = `${round1(state.fxLossQin)}`;
+  $("statTrade").textContent = `${round1(state.tradeProfitQin)}`;
+}
+function renderWalletCards(){
+  const box = $("walletCards");
+  box.innerHTML = "";
+  nations.forEach(n=>{
+    const key = rateKey(n.id);
+    const amt = state.wallet[key] || 0;
+    const r = toQinRate(key);
+    const rText = `1${n.currency} ≈ ${round3(r)} 秦半两`;
+
+    const item = document.createElement("div");
+    item.className = "wallet-item";
+    item.innerHTML = `
+      <div class="w-left">
+        <div class="w-ico" style="background:${n.color}22;border-color:${n.color}55;color:${n.color}">
+          ${n.icon}
+        </div>
+        <div class="w-meta">
+          <div class="w-name">${n.currency}（${n.name}）</div>
+          <div class="w-rate">${rText}</div>
+        </div>
+      </div>
+      <div class="w-amt">${round1(amt)} <small>${n.currency}</small></div>
+    `;
+    box.appendChild(item);
+  });
+}
+function renderAll(){
+  renderNationGrid();
+  renderTasks();
+  renderStats();
+  renderWalletCards();
+}
+
+function goNation(id){
+  state.currentNation = id;
+  renderNationGrid();
+  checkTasksOnMove();
+}
+
+function requireArrived(nationId, actionText){
+  if(state.currentNation !== nationId){
+    const nn = nations.find(x=>x.id===nationId);
+    showToast(`请先到达${nn.name}才可${actionText}`);
+    return false;
+  }
+  return true;
+}
+
+/* ====== Market ====== */
+let marketNation = null;
+function openMarket(nationId){
+  if(!requireArrived(nationId, "交易")) return;
+  marketNation = nationId;
+
+  const n = nations.find(x=>x.id===nationId);
+  $("marketTitle").textContent = `${n.name} · 商品集市（货币：${n.currency}）`;
+
+  const priceList = getPrices(nationId);
+  const tb = $("marketTable");
+  tb.innerHTML = "";
+  priceList.forEach(p=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${p.name}</b></td>
+      <td>${p.buy} ${n.currency}</td>
+      <td>${p.sell} ${n.currency}</td>
+      <td>${state.inv[p.id] || 0}</td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  const sel = $("marketGood");
+  sel.innerHTML = "";
+  priceList.forEach(p=>{
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+
+  const curKey = rateKey(nationId);
+  $("miniNation").textContent = n.name;
+  $("miniCur").textContent = n.currency;
+  $("miniBal").textContent = `${round1(state.wallet[curKey]||0)} ${n.currency}`;
+  $("miniTrade").textContent = `${round1(state.tradeProfitQin)} 秦半两`;
+  $("miniFx").textContent = `${round1(state.fxLossQin)} 秦半两`;
+  $("miniNet").textContent = `${round1(netProfitQin())} 秦半两`;
+
+  const marketListText = (marketGoodsByNation[nationId]||[])
+    .map(id=>goods.find(g=>g.id===id).name).join("、");
+  $("marketHint").innerHTML = `该国市场商品：<b>${marketListText || "无"}</b>`;
+
+  $("marketToast").className = "toast";
+  $("marketToast").textContent = "提示：买卖按本国货币结算，不收外币。";
+
+  openModal("marketModal");
+}
+
+function marketBuy(){
+  if(!marketNation) return;
+  const n = nations.find(x=>x.id===marketNation);
+  const goodId = $("marketGood").value;
+  const qty = Math.max(1, Number($("marketQty").value||1));
+
+  const priceList = getPrices(marketNation);
+  const p = priceList.find(x=>x.id===goodId);
+  const costLocal = p.buy * qty;
+
+  const curKey = rateKey(marketNation);
+  const bal = state.wallet[curKey] || 0;
+  if(bal < costLocal){
+    $("marketToast").className = "toast bad";
+    $("marketToast").textContent = `余额不足：需要 ${round1(costLocal)} ${n.currency}，你只有 ${round1(bal)}。去“货币兑换”换成本国货币。`;
+    return;
+  }
+
+  state.wallet[curKey] -= costLocal;
+  state.inv[goodId] += qty;
+
+  const costQin = costLocal * toQinRate(curKey);
+  state.tradeProfitQin -= costQin;
+
+  $("marketToast").className = "toast";
+  $("marketToast").textContent = `✅ 买入：${goods.find(g=>g.id===goodId).name} × ${qty}，花费 ${round1(costLocal)} ${n.currency}`;
+
+  checkTasksOnBuy(goodId);
+  renderAll();
+  openMarket(marketNation);
+}
+
+function marketSell(){
+  if(!marketNation) return;
+  const n = nations.find(x=>x.id===marketNation);
+  const goodId = $("marketGood").value;
+  const qty = Math.max(1, Number($("marketQty").value||1));
+
+  const have = state.inv[goodId] || 0;
+  if(have < qty){
+    $("marketToast").className = "toast bad";
+    $("marketToast").textContent = `库存不足：你只有 ${have}。`;
+    return;
+  }
+
+  const priceList = getPrices(marketNation);
+  const p = priceList.find(x=>x.id===goodId);
+  const gainLocal = p.sell * qty;
+
+  const curKey = rateKey(marketNation);
+  state.wallet[curKey] += gainLocal;
+  state.inv[goodId] -= qty;
+
+  const gainQin = gainLocal * toQinRate(curKey);
+  state.tradeProfitQin += gainQin;
+
+  $("marketToast").className = "toast";
+  $("marketToast").textContent = `✅ 卖出：${goods.find(g=>g.id===goodId).name} × ${qty}，收入 ${round1(gainLocal)} ${n.currency}`;
+
+  checkTasksOnSell(goodId);
+  renderAll();
+  openMarket(marketNation);
+}
+
+/* ====== FX ====== */
+let fxNation = null;
+const FX_FEE = 0.10;
+
+function openFx(nationId){
+  if(!requireArrived(nationId, "兑换")) return;
+  fxNation = nationId;
+
+  const n = nations.find(x=>x.id===nationId);
+  $("fxTitle").textContent = `${n.name} - 货币兑换`;
+  $("fxFeeText").textContent = `${Math.round(FX_FEE*100)}%`;
+
+  const from = $("fxFrom");
+  from.innerHTML = "";
+  nations.forEach(nn=>{
+    const k = rateKey(nn.id);
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = `${nn.currency}（${nn.name}）`;
+    from.appendChild(opt);
+  });
+  from.value = QIN_KEY;
+
+  const targetKey = rateKey(nationId);
+  $("fxTargetName").textContent = nations.find(x=>x.id===nationId).currency;
+
+  $("fxAmt").value = 10;
+  updateFxPreview();
+
+  $("fxHint").innerHTML = `提示：你目前已到达 <b>${n.name}</b>，可在此兑换本国货币以完成交易任务。`;
+  openModal("fxModal");
+}
+
+function updateFxPreview(){
+  if(!fxNation) return;
+  const fromKey = $("fxFrom").value;
+  const targetKey = rateKey(fxNation);
+  const amt = Math.max(0, Number($("fxAmt").value||0));
+
+  const rate = convert(1, fromKey, targetKey);
+  const gross = amt * rate;
+  const fee = gross * FX_FEE;
+  const receive = gross - fee;
+
+  const fromCur = fromKey.split("|")[1];
+  const toCur = targetKey.split("|")[1];
+
+  $("fxRateLine").textContent = `1 ${fromCur} ≈ ${round3(rate)} ${toCur}`;
+  $("fxReceive").textContent = `${round1(receive)} ${toCur}`;
+  $("fxFeeAmount").textContent = `-${round1(fee)} ${toCur} (${Math.round(FX_FEE*100)}%)`;
+}
+
+document.getElementById("fxFrom").addEventListener("change", updateFxPreview);
+document.getElementById("fxAmt").addEventListener("input", updateFxPreview);
+
+function doExchange(){
+  if(!fxNation) return;
+  const fromKey = $("fxFrom").value;
+  const targetKey = rateKey(fxNation);
+  const amt = Math.max(1, Number($("fxAmt").value||1));
+
+  const bal = state.wallet[fromKey] || 0;
+  if(bal < amt){
+    $("fxHint").innerHTML = `<span style="color:#b42318;font-weight:900;">余额不足：</span>你只有 ${round1(bal)} ${fromKey.split("|")[1]}。`;
+    return;
+  }
+
+  const rate = convert(1, fromKey, targetKey);
+  const gross = amt * rate;
+  const fee = gross * FX_FEE;
+  const receive = gross - fee;
+
+  state.wallet[fromKey] -= amt;
+  state.wallet[targetKey] += receive;
+
+  const feeQin = fee * toQinRate(targetKey);
+  state.fxLossQin += feeQin;
+
+  renderAll();
+  updateFxPreview();
+  $("fxHint").innerHTML =
+    `✅ 兑换成功：获得 <b style="color:#16a34a;">${round1(receive)} ${targetKey.split("|")[1]}</b>，手续费 <b style="color:#ff4d4f;">${round1(fee)} ${targetKey.split("|")[1]}</b> 已计入“兑换损失”。`;
+
+  maybeShowDoneModal();
+}
+
+/* ====== Modal helpers ====== */
+function openModal(id){ $(id).style.display="flex"; }
+function closeModal(id){ $(id).style.display="none"; }
+</script>
+</body>
+</html>
