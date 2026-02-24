@@ -446,16 +446,16 @@
           <div class="stats-divider"></div>
           <div class="stat-grid">
             <div class="stat">
-              <div class="label">已完成任务</div>
-              <div class="value" id="statTasks">0</div>
-            </div>
-            <div class="stat">
               <div class="label">兑换损失（秦半两）</div>
               <div class="value red" id="statFxLoss">0.0</div>
             </div>
             <div class="stat">
               <div class="label">贸易利润（秦半两）</div>
               <div class="value green" id="statTrade">0.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">净利润（秦半两）</div>
+              <div class="value green" id="statNet">0.0</div>
             </div>
           </div>
         </div>
@@ -498,8 +498,7 @@
               <thead>
                 <tr>
                   <th>商品</th>
-                  <th>买入价</th>
-                  <th>卖出价</th>
+                  <th>市场价</th>
                   <th>你的库存</th>
                 </tr>
               </thead>
@@ -897,9 +896,9 @@ function renderTasks(){
   });
 }
 function renderStats(){
-  $("statTasks").textContent = state.completedTasks;
   $("statFxLoss").textContent = `${round1(state.fxLossQin)}`;
   $("statTrade").textContent = `${round1(state.tradeProfitQin)}`;
+  $("statNet").textContent = `${round1(netProfitQin())}`;
 }
 function renderWalletCards(){
   const box = $("walletCards");
@@ -965,7 +964,6 @@ function openMarket(nationId){
     tr.innerHTML = `
       <td><b>${p.name}</b></td>
       <td>${p.buy} ${n.currency}</td>
-      <td>${p.sell} ${n.currency}</td>
       <td>${state.inv[p.id] || 0}</td>
     `;
     tb.appendChild(tr);
@@ -1045,7 +1043,7 @@ function marketSell(){
 
   const priceList = getPrices(marketNation);
   const p = priceList.find(x=>x.id===goodId);
-  const gainLocal = p.sell * qty;
+  const gainLocal = p.buy * qty;
 
   const curKey = rateKey(marketNation);
   state.wallet[curKey] += gainLocal;
